@@ -1,3 +1,4 @@
+import random
 from typing import Callable
 import pygame
 from config import config_manager
@@ -8,6 +9,7 @@ class MainWindow:
     conf = config_manager.get()
 
     def __init__(self):
+        random.seed(self.conf.random_seed)
         pygame.init()
         self.resolution = self.conf.tile_config.resolution
         self.grid_size = self.conf.grid_size
@@ -34,6 +36,8 @@ class MainWindow:
             self.clock.tick(fps)
             self._handle_event()
             self.screen.fill(bg_color)
+
+            self.world.update()
 
             self.render()
 

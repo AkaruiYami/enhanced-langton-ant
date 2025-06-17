@@ -1,8 +1,8 @@
 {
-    "fps": 60,
+    "fps": 30,
     "grid_size": [
-        30,
-        30
+        50,
+        50
     ],
     "window_size": [
         500,
@@ -12,11 +12,14 @@
     "ant_config": {
         "limit": -1,
         "types": {
-            "NormalAnt": 1,
-            "ReversedAnt": 2
+            "NormalAnt": 3,
+            "ReversedAnt": 2,
+            "TransposedAnt": 3,
+            "DoubleFlipperAnt": 2
         }
     },
     "tile_config": {
         "resolution": 15
-    }
+    },
+    "random_seed": null
 }

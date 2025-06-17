@@ -56,6 +56,19 @@ class Vector2:
     def __ifloordiv__(self, other):
         return self.__itruediv__(other)
 
+    def __getitem__(self, index) -> int:
+        result = None
+        if index == 0:
+            result = self.x
+        elif index == 1:
+            result = self.y
+        else:
+            IndexError("Vector2 only have 2 index 0 (x) or 1 (y).")
+
+        if result is None:
+            return 0
+        return result
+
     def _get_xy(self, other) -> tuple[int, int] | tuple[float, float]:
         if isinstance(other, Vector2):
             return other.x, other.y

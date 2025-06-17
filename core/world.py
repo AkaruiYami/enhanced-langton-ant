@@ -17,7 +17,15 @@ class World:
         self._init_ants()
 
     def update(self):
-        pass
+        for ant in self.ants:
+            ant.update(self)
+
+    def flip_tile(self, position: Vector2 | tuple[int, int] | list[int], n: int = 1):
+        x, y = position
+        curr_tile = self.get_tile(position)
+        curr_id = TileRegistry.names().index(curr_tile.__class__.__name__)
+        new_id = (curr_id + n) % len(TileRegistry.all())
+        self.tiles[y][x] = TileRegistry.at(new_id)[1]()
 
     def get_tile(self, position: Vector2 | tuple[int, int] | list[int]) -> Tile:
         x, y = position
@@ -40,4 +48,4 @@ class World:
                 raise ValueError(f"The number of {name} cannot be below 0.")
 
             mid = self.grid_size / 2
-            self.ants.extend([ant(mid)] * count)
+            self.ants.extend([ant(mid) for _ in range(count)])

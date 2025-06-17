@@ -1,7 +1,8 @@
-from typing import Tuple, Type, TypeVar, Generic, Dict, Optional
+from typing import TYPE_CHECKING, Tuple, Type, TypeVar, Generic, Dict, Optional
 
-from core.ant import Ant
-from core.tile import Tile
+if TYPE_CHECKING:
+    from core.ant import Ant
+    from core.tile import Tile
 
 T = TypeVar("T")
 
@@ -34,9 +35,9 @@ class BaseRegistry(Generic[T]):
         return list(cls._registry.keys())
 
 
-class TileRegistry(BaseRegistry[Tile]):
-    _registry: Dict[str, Type[Tile]] = {}
+class TileRegistry(BaseRegistry["Tile"]):
+    _registry: Dict[str, Type["Tile"]] = {}
 
 
-class AntRegistry(BaseRegistry[Ant]):
-    _registry: Dict[str, Type[Ant]] = {}
+class AntRegistry(BaseRegistry["Ant"]):
+    _registry: Dict[str, Type["Ant"]] = {}

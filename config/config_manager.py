@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Optional
 from pydantic import BaseModel, PositiveInt
 
 
@@ -19,6 +20,7 @@ class WorldConfig(BaseModel):
     background_color: str
     ant_config: AntConfig
     tile_config: TileConfig
+    random_seed: Optional[int] = None
 
 
 def default(path: str | Path):
