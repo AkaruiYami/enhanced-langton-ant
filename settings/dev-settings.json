@@ -1,0 +1,22 @@
+{
+    "fps": 60,
+    "grid_size": [
+        3,
+        1
+    ],
+    "window_size": [
+        500,
+        500
+    ],
+    "background_color": "#FFFFFF",
+    "ant_config": {
+        "limit": -1,
+        "types": {
+            "NormalAnt": 1,
+            "ReversedAnt": 2
+        }
+    },
+    "tile_config": {
+        "resolution": 15
+    }
+}
