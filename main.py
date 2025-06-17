@@ -1,13 +1,16 @@
-from core.world import World
-
 # TODO: Automatically call the registry
 import engine
+from gui import MainWindow
+from gui.renderer import draw_ant, draw_tile
 
 
 def main():
-    w = World()
-    print(w.ants)
-    print(w.tiles)
+    app = MainWindow()
+
+    app.add_renderer(draw_tile)
+    app.add_renderer(draw_ant)
+
+    app.run()
 
 
 if __name__ == "__main__":

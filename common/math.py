@@ -57,7 +57,7 @@ class Vector2:
         return self.__itruediv__(other)
 
     def _get_xy(self, other) -> tuple[int, int] | tuple[float, float]:
-        if isinstance(other, "Vector2"):
+        if isinstance(other, Vector2):
             return other.x, other.y
         elif isinstance(other, (tuple, list)) and len(other) == 2:
             return other[0], other[1]

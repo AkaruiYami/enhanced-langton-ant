@@ -1,4 +1,4 @@
-from typing import Tuple, TypeVar, Generic, Type, Dict, Optional
+from typing import Tuple, Type, TypeVar, Generic, Dict, Optional
 
 from core.ant import Ant
 from core.tile import Tile
@@ -10,22 +10,23 @@ class BaseRegistry(Generic[T]):
     _registry = {}
 
     @classmethod
-    def register(cls, name: str, item_cls: Type[T]) -> Type[T]:
+    def register(cls, name: str, item_cls: Type) -> Type:
         cls._registry[name] = item_cls
         return item_cls
 
     @classmethod
-    def at(cls, index: int) -> Tuple[str, Type[T]]:
+    def at(cls, index: int) -> Tuple[str, Type]:
         if not cls._registry:
             raise IndexError(f"Registry in {cls.__name__} is empty.")
-        return list(cls._registry.items())[index]
+        name, tile = list(cls._registry.items())[index]
+        return name, tile
 
     @classmethod
-    def get(cls, name: str) -> Optional[Type[T]]:
+    def get(cls, name: str) -> Optional[Type]:
         return cls._registry.get(name)
 
     @classmethod
-    def all(cls) -> Dict[str, Type[T]]:
+    def all(cls) -> Dict[str, Type]:
         return cls._registry
 
     @classmethod
@@ -34,8 +35,8 @@ class BaseRegistry(Generic[T]):
 
 
 class TileRegistry(BaseRegistry[Tile]):
-    _registry: Dict[str, Tile] = {}
+    _registry: Dict[str, Type[Tile]] = {}
 
 
 class AntRegistry(BaseRegistry[Ant]):
-    _registry: Dict[str, Ant] = {}
+    _registry: Dict[str, Type[Ant]] = {}
