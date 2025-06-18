@@ -1,2 +1,3 @@
-from . import anttype
-from . import tiletype
+from . import autoload
+
+__all__ = ["autoload"]
