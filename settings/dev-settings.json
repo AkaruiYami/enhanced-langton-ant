@@ -10,12 +10,10 @@
     ],
     "background_color": "#FFFFFF",
     "ant_config": {
-        "limit": -1,
+        "limit": 50,
         "types": {
-            "NormalAnt": 3,
-            "ReversedAnt": 2,
-            "TransposedAnt": 3,
-            "DoubleFlipperAnt": 2
+            "MotherAnt": 1,
+            "RadiationAnt": 2
         }
     },
     "tile_config": {
