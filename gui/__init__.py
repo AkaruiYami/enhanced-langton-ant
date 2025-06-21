@@ -9,7 +9,11 @@ class MainWindow:
     conf = config_manager.get()
 
     def __init__(self):
-        random.seed(self.conf.random_seed)
+        self.random_seed = self.conf.random_seed
+        if self.random_seed is None:
+            self.random_seed = random.randrange(sys.maxsize)
+        random.seed(self.random_seed)
+
         pygame.init()
         self.resolution = self.conf.tile_config.resolution
         self.grid_size = self.conf.grid_size
