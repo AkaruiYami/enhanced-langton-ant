@@ -1,8 +1,10 @@
+import sys
 import random
 from typing import Callable
 import pygame
 from config import config_manager
 from core.world import World
+from gui.menu import PauseMenu
 
 
 class MainWindow:
@@ -25,6 +27,7 @@ class MainWindow:
         self.renderer = []
 
         self.world = World()
+        self.p = PauseMenu(self.window_size)
 
     def add_renderer(self, renderer: Callable[["MainWindow"], None]):
         self.renderer.append(renderer)
@@ -32,6 +35,7 @@ class MainWindow:
     def render(self):
         for to_render in self.renderer:
             to_render(self)
+        self.p.render(self.screen)
 
     def run(self):
         fps = self.conf.fps
@@ -40,7 +44,6 @@ class MainWindow:
             self.clock.tick(fps)
             self._handle_event()
             self.screen.fill(bg_color)
-
             self.world.update()
 
             self.render()
@@ -60,3 +63,5 @@ class MainWindow:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+
+            self.p.update(event)
