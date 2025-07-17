@@ -2,6 +2,7 @@ import sys
 import random
 from typing import Callable
 import pygame
+from common.event import UI_BUTTON_CLICKED
 from config import config_manager
 from core.world import World
 from gui.menu import FrontMenu
@@ -63,5 +64,11 @@ class MainWindow:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-
+            elif event.type == UI_BUTTON_CLICKED:
+                if event.dict.get("buttonId") == "New":
+                    print("New Button CLicked")  # TODO: implement new logic
+                elif event.dict.get("buttonId") == "Load":
+                    print("Load Button CLicked")  # TODO: implement load save logic
+                elif event.dict.get("buttonId") == "Quit":
+                    self.running = False
             self.p.update(event)

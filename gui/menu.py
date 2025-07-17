@@ -1,4 +1,6 @@
 import pygame
+from common import Alignment
+from common import constant
 from common.constant import HTMLColor
 from gui.component import Button
 from gui.layout import Column, Row
@@ -20,22 +22,38 @@ def _construct_button(label: str) -> Button:
 class FrontMenu:
     def __init__(self, parent):
         self.parent = parent
+        self.surface = self._construct_menu()
 
     def _construct_menu(self):
-        row = Row()
-        column = Column()
-        column.push(_construct_button("New"))
-        column.push(_construct_button("Load"))
-        column.push(_construct_button("Quit"))
+        row = Row(alignment=Alignment.CENTER, rect=self.parent.screen.get_rect())
+        column = Column(spacing=10, alignment=Alignment.CENTER, rect=row.get_rect())
+
+        self._new_button = _construct_button("New")
+        self._load_button = _construct_button("Load")
+        self._quit_button = _construct_button("Quit")
+
+        column.rect.width = max(
+            self._new_button.rect.width,
+            self._load_button.rect.width,
+            self._quit_button.rect.width,
+        )
+
         row.push(column)
+        column.push(self._new_button)
+        column.push(self._load_button)
+        column.push(self._quit_button)
+
         return row
 
     def render(self, surface: pygame.Surface, position=(0, 0)):
-        surf = self._construct_menu()
-        surf.render(surface, position)
+        bg = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+        bg.fill(constant.HTMLColor.BLACK + "80")
+
+        surface.blit(bg, (0, 0))
+        self.surface.render(surface, position)
 
     def update(self, event):
-        pass
+        self.surface.update(event)
 
 
 class PauseMenu:
@@ -58,5 +76,4 @@ class PauseMenu:
         surface.blit(self.surface, (0, 0))
 
     def update(self, event):
-        if self.pause_button.is_clicked(event):
-            print("Button Clicked!")
+        pass

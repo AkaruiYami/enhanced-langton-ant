@@ -1,14 +1,27 @@
-from typing import Optional
 import pygame
 from abc import ABC, abstractmethod
+from common.event import UI_BUTTON_CLICKED
 
 
 class Component(ABC):
-    def __init__(self, rect: Optional[pygame.Rect] = None):
+    def __init__(
+        self,
+        rect: pygame.Rect,
+        expand_x: bool = False,
+        expand_y: bool = False,
+    ):
         self.rect = rect
+        self._expand_x = expand_x
+        self._expand_y = expand_y
 
     @abstractmethod
     def render(self, surface: pygame.Surface, position: tuple[int, int] = (0, 0)): ...
+
+    @abstractmethod
+    def update(self, event: pygame.event.EventType): ...
+
+    def get_rect(self):
+        return self.rect.copy()
 
 
 class Button(Component):
@@ -34,15 +47,14 @@ class Button(Component):
     def render(self, surface: pygame.Surface, position=(0, 0)):
         if self.rect is None:
             raise ValueError
-        adjusted_rect = self.rect.move(position[0], position[1])
-        self._draw_rect(surface, adjusted_rect)
-        self._draw_text(surface, adjusted_rect)
+        self._draw_rect(surface, self.rect)
+        self._draw_text(surface, self.rect)
 
-    def is_clicked(self, event):
+    def update(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.rect and self.rect.collidepoint(event.pos):
-                return True
-        return False
+                _event = pygame.event.Event(UI_BUTTON_CLICKED, {"buttonId": self.label})
+                pygame.event.post(_event)
 
     def _draw_rect(self, surface, rect):
         mouse_pos = pygame.mouse.get_pos()
