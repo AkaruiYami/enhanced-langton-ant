@@ -4,7 +4,7 @@ from typing import Callable
 import pygame
 from config import config_manager
 from core.world import World
-from gui.menu import PauseMenu
+from gui.menu import FrontMenu
 
 
 class MainWindow:
@@ -27,7 +27,7 @@ class MainWindow:
         self.renderer = []
 
         self.world = World()
-        self.p = PauseMenu(self.window_size)
+        self.p = FrontMenu(self)
 
     def add_renderer(self, renderer: Callable[["MainWindow"], None]):
         self.renderer.append(renderer)
