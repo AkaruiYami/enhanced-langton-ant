@@ -5,7 +5,7 @@ import pygame
 from common.event import UI_BUTTON_CLICKED
 from config import config_manager
 from core.world import World
-from gui.menu import FrontMenu
+from gui.menu import EditorMenu, FrontMenu
 
 
 class MainWindow:
@@ -28,7 +28,7 @@ class MainWindow:
         self.renderer = []
 
         self.world = World()
-        self.p = FrontMenu(self)
+        self.p = EditorMenu(self)
 
     def add_renderer(self, renderer: Callable[["MainWindow"], None]):
         self.renderer.append(renderer)
@@ -66,9 +66,11 @@ class MainWindow:
                 self.running = False
             elif event.type == UI_BUTTON_CLICKED:
                 if event.dict.get("buttonId") == "New":
-                    print("New Button CLicked")  # TODO: implement new logic
+                    self.world.reset()
                 elif event.dict.get("buttonId") == "Load":
                     print("Load Button CLicked")  # TODO: implement load save logic
                 elif event.dict.get("buttonId") == "Quit":
                     self.running = False
+                else:
+                    print(event.buttonId)
             self.p.update(event)

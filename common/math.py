@@ -43,7 +43,7 @@ class Vector2:
         self.y = int(self.y - dy)
         return self
 
-    def __mul__(self, other: "Vector2"):
+    def __mul__(self, other):
         x, y = _get_xy(other)
         return Vector2(int(self.x * x), int(self.y * y))
 

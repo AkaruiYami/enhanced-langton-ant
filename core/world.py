@@ -9,6 +9,9 @@ class World:
     config = config_manager.get()
 
     def __init__(self):
+        self.reset()
+
+    def reset(self):
         self.ants: list[Ant] = []
         self.tiles: list[list[Tile]] = []
         self.grid_size = Vector2(*self.config.grid_size)
@@ -30,6 +33,16 @@ class World:
     def get_tile(self, position: Vector2 | tuple[int, int] | list[int]) -> Tile:
         x, y = position
         return self.tiles[y][x]
+
+    @classmethod
+    def point_to_grid(cls, point: Vector2 | tuple[int, int] | list[int]) -> Vector2:
+        point = Vector2(*point)
+        return point / cls.config.tile_config.resolution
+
+    @classmethod
+    def grid_to_point(cls, grid_coor: Vector2 | tuple[int, int] | list[int]) -> Vector2:
+        point = Vector2(*grid_coor)
+        return point * cls.config.tile_config.resolution
 
     def _init_tiles(self):
         x, y = self.grid_size
