@@ -1,3 +1,5 @@
+import os
+import json
 import sys
 import random
 from typing import Callable
@@ -5,7 +7,7 @@ import pygame
 from common.event import UI_BUTTON_CLICKED
 from config import config_manager
 from core.world import World
-from gui.menu import FrontMenu
+from gui.menu import FrontMenu, EditorMenu
 
 
 class MainWindow:
@@ -69,16 +71,25 @@ class MainWindow:
                 self.running = False
             elif event.type == UI_BUTTON_CLICKED:
                 if event.dict.get("buttonId") == "New":
-                    self._menu = False
-                    self.world.reset()
+                    self.p = EditorMenu(self)
+                    self.world.running = False
                 elif event.dict.get("buttonId") == "Load":
-                    print("Load Button CLicked")  # TODO: implement load save logic
+                    path = os.path.join(os.getcwd(), "world_map.json")
+                    if not os.path.exists(path):
+                        print("No world_map.json found.")
+                    else:
+                        with open(path, "r") as f:
+                            data = json.load(f)
+                        self.world.load(data)
+                        self._menu = False
+                        print("Loaded world from world_map.json")
                 elif event.dict.get("buttonId") == "Quit":
                     self.running = False
                 else:
                     print(event.buttonId)
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE and not self._menu:
+                    self.p = FrontMenu(self)
                     self._menu = not self._menu
 
             if self._menu:

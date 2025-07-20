@@ -64,3 +64,22 @@ class World:
 
             mid = self.grid_size / 2
             self.ants.extend([ant(mid) for _ in range(count)])
+
+    def load(self, data: dict):
+        self.running = False
+        self.reset()
+        self.ants.clear()
+        self.tiles = [[TileRegistry.at(0)[1]() for _ in range(int(self.grid_size[0]))] for _ in range(int(self.grid_size[1]))]
+        # Load ants
+        for ant_info in data.get("ants", []):
+            ant_cls = AntRegistry.get(ant_info["type"])
+            if ant_cls:
+                pos = ant_info["position"]
+                self.ants.append(ant_cls(pos))
+        # Load tiles
+        for tile_info in data.get("tiles", []):
+            tile_cls = TileRegistry.get(tile_info["type"])
+            if tile_cls:
+                x, y = tile_info["position"]
+                self.tiles[y][x] = tile_cls()
+        self.running = True

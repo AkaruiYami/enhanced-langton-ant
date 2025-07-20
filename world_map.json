@@ -1,0 +1,20 @@
+{
+  "ants": [
+    {
+      "type": "MotherAnt",
+      "position": [
+        24,
+        21
+      ]
+    }
+  ],
+  "tiles": [
+    {
+      "type": "YellowTile",
+      "position": [
+        24,
+        21
+      ]
+    }
+  ]
+}
