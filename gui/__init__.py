@@ -5,7 +5,7 @@ import pygame
 from common.event import UI_BUTTON_CLICKED
 from config import config_manager
 from core.world import World
-from gui.menu import EditorMenu, FrontMenu
+from gui.menu import FrontMenu
 
 
 class MainWindow:
@@ -28,7 +28,9 @@ class MainWindow:
         self.renderer = []
 
         self.world = World()
-        self.p = EditorMenu(self)
+        self.world.running = True
+        self.p = FrontMenu(self)
+        self._menu = True
 
     def add_renderer(self, renderer: Callable[["MainWindow"], None]):
         self.renderer.append(renderer)
@@ -36,7 +38,8 @@ class MainWindow:
     def render(self):
         for to_render in self.renderer:
             to_render(self)
-        self.p.render(self.screen)
+        if self._menu:
+            self.p.render(self.screen)
 
     def run(self):
         fps = self.conf.fps
@@ -66,6 +69,7 @@ class MainWindow:
                 self.running = False
             elif event.type == UI_BUTTON_CLICKED:
                 if event.dict.get("buttonId") == "New":
+                    self._menu = False
                     self.world.reset()
                 elif event.dict.get("buttonId") == "Load":
                     print("Load Button CLicked")  # TODO: implement load save logic
@@ -73,4 +77,9 @@ class MainWindow:
                     self.running = False
                 else:
                     print(event.buttonId)
-            self.p.update(event)
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE and not self._menu:
+                    self._menu = not self._menu
+
+            if self._menu:
+                self.p.update(event)

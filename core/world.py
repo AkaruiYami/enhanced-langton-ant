@@ -10,6 +10,7 @@ class World:
 
     def __init__(self):
         self.reset()
+        self.running = False
 
     def reset(self):
         self.ants: list[Ant] = []
@@ -20,8 +21,9 @@ class World:
         self._init_ants()
 
     def update(self):
-        for ant in self.ants:
-            ant.update(self)
+        if self.running:
+            for ant in self.ants:
+                ant.update(self)
 
     def flip_tile(self, position: Vector2 | tuple[int, int] | list[int], n: int = 1):
         x, y = position

@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 import pygame
 from common import Alignment
-from common import constant
 from common.constant import HTMLColor
 from common.math import Vector2
 from core.world import World
@@ -65,7 +64,7 @@ class FrontMenu(Menu):
 
     def render(self, surface: pygame.Surface, position=(0, 0)):
         bg = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-        bg.fill(constant.HTMLColor.BLACK + "80")
+        bg.fill(HTMLColor.BLACK + "80")
 
         surface.blit(bg, (0, 0))
         self.surface.render(surface, position)
@@ -86,7 +85,7 @@ class EditorMenu(Menu):
         self._is_ant_panel_active = False
 
     def render(self, surface: pygame.Surface, position=(0, 0)):
-        self.surface.fill(constant.HTMLColor.WHITE)
+        self.surface.fill(HTMLColor.WHITE)
 
         self._render_grid_lines()
 
@@ -113,14 +112,14 @@ class EditorMenu(Menu):
         for x in range(0, grid_size.x, cell_size):
             pygame.draw.line(
                 self.surface,
-                constant.HTMLColor.BLACK,
+                HTMLColor.BLACK,
                 (x, 0),
                 (x, grid_size.y),
             )
         for y in range(0, grid_size.y, cell_size):
             pygame.draw.line(
                 self.surface,
-                constant.HTMLColor.BLACK,
+                HTMLColor.BLACK,
                 (0, y),
                 (grid_size.x, y),
             )
@@ -129,6 +128,8 @@ class EditorMenu(Menu):
         _size = self.surface.get_size()
         height = _size[1] // 4
         width = _size[0]
+
         _surface = pygame.Surface((width, height))
-        _surface.fill(constant.HTMLColor.PURPLE)
+        _surface.fill(HTMLColor.PURPLE)
+
         self.surface.blit(_surface, (0, _size[1] - height))
