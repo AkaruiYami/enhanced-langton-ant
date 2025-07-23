@@ -74,7 +74,8 @@ class MainWindow:
                     self.p = EditorMenu(self)
                     self.world.running = False
                 elif event.dict.get("buttonId") == "Load":
-                    path = os.path.join(os.getcwd(), "world_map.json")
+                    # TODO: ask user name to load
+                    path = os.path.join(os.getcwd(), "data/world_map.json")
                     if not os.path.exists(path):
                         print("No world_map.json found.")
                     else:

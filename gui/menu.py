@@ -89,14 +89,15 @@ class EditorMenu(Menu):
         self.surface = pygame.Surface(parent.screen.get_size())
         self._is_ant_panel_active = False
         self.selected_entity = None
-        self.ants: list[Ant] = []  
-        self.tiles = {}  
+        self.ants: list[Ant] = []
+        self.tiles = {}
         self._entity_types = self._load_entity_types()
         self._save_button = _construct_button("Save")
         self._load_button = _construct_button("Load")
 
     def _load_entity_types(self):
         from core.registry import AntRegistry, TileRegistry
+
         return {
             "ant": AntRegistry.names(),
             "tile": TileRegistry.names(),
@@ -181,7 +182,6 @@ class EditorMenu(Menu):
             center_y = ay * cell_size + cell_size // 2
             radius = cell_size // 2
             pygame.draw.circle(self.surface, ant.color, (center_x, center_y), radius)
-        
 
     def _render_selection_panel(self):
         _size = self.surface.get_size()
@@ -201,7 +201,7 @@ class EditorMenu(Menu):
             btn_rect = pygame.Rect(x, y, 100, 40)
             pygame.draw.rect(_surface, HTMLColor.WHITE, btn_rect)
             txt = font.render(ent_type, True, HTMLColor.BLACK)
-            _surface.blit(txt, (x+10, y+10))
+            _surface.blit(txt, (x + 10, y + 10))
             x += 120
             if (idx + 1) % max_per_row == 0:
                 x = 10
@@ -233,14 +233,20 @@ class EditorMenu(Menu):
         self._load_button.render(self.surface)
 
     def _save_map(self):
+        # TODO: ask user what name should it use to save the map
         ants_data = [
-            {"type": ant.__class__.__name__, "position": [int(ant.position[0]), int(ant.position[1])]} for ant in self.ants
+            {
+                "type": ant.__class__.__name__,
+                "position": [int(ant.position[0]), int(ant.position[1])],
+            }
+            for ant in self.ants
         ]
         tiles_data = [
-            {"type": tile.__class__.__name__, "position": [int(pos[0]), int(pos[1])]} for pos, tile in self.tiles.items()
+            {"type": tile.__class__.__name__, "position": [int(pos[0]), int(pos[1])]}
+            for pos, tile in self.tiles.items()
         ]
         data = {"ants": ants_data, "tiles": tiles_data}
-        path = os.path.join(os.getcwd(), "world_map.json")
+        path = os.path.join(os.getcwd(), "data/world_map.json")
         with open(path, "w") as f:
             json.dump(data, f, indent=2)
         self.parent._menu = False
