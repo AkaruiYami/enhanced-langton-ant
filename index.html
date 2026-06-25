@@ -36,15 +36,19 @@
     </section>
 
     <section>
-      <h2>Live Demo</h2>
-      <p>Run the simulation directly in your browser (powered by WebAssembly):</p>
-      <p><a href="demo/" class="demo-link">&#9654; Launch Langton's Ant Demo</a></p>
-    </section>
-
-    <section>
       <h2>Quick Start</h2>
       <pre><code>uv run python main.py</code></pre>
       <p>Requires Python &ge;3.13 and <a href="https://docs.astral.sh/uv/">uv</a>.</p>
+    </section>
+
+    <section>
+      <h2>Adding Custom Entities</h2>
+      <ol>
+        <li>Subclass <code>Ant</code> or <code>Tile</code> from <code>core/</code>.</li>
+        <li>Implement the required abstract method.</li>
+        <li>Save the file in <code>assets/entity/</code> or <code>mods/</code>.</li>
+        <li>Add its class name + count to <code>ant_config.types</code> in <code>settings/dev-settings.json</code>.</li>
+      </ol>
     </section>
 
     <section>
@@ -56,16 +60,6 @@
         <li><code>common/</code> — <code>Vector2</code>, <code>HTMLColor</code>, <code>DirectionVector</code></li>
         <li><code>config/</code> — Pydantic config models, settings loader</li>
       </ul>
-    </section>
-
-    <section>
-      <h2>Adding Custom Entities</h2>
-      <ol>
-        <li>Subclass <code>Ant</code> or <code>Tile</code> from <code>core/</code>.</li>
-        <li>Implement the required abstract method.</li>
-        <li>Save the file in <code>assets/entity/</code> or <code>mods/</code>.</li>
-        <li>Add its class name + count to <code>ant_config.types</code> in <code>settings/dev-settings.json</code>.</li>
-      </ol>
     </section>
 
     <section>
