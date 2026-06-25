@@ -85,6 +85,21 @@ a:hover {
   text-decoration: underline;
 }
 
+.demo-link {
+  display: inline-block;
+  background: #23CE09;
+  color: #1a1a2e;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.demo-link:hover {
+  background: #61FD3A;
+  text-decoration: none;
+}
+
 footer {
   text-align: center;
   color: #555;
