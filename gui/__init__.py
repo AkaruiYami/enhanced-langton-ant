@@ -90,7 +90,7 @@ class MainWindow:
                 elif event.dict.get("buttonId") == "Quit":
                     self.running = False
                 else:
-                    print(event.buttonId)
+                    print(event.dict.get("buttonId"))
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE and not self._menu:
                     self.p = FrontMenu(self)
