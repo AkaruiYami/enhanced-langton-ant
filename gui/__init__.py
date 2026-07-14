@@ -31,7 +31,6 @@ class MainWindow:
 
         self.world = World()
         self.world.running = True
-        self._editor: EditorMenu | None = None
         self.p = FrontMenu(self)
         self._menu = True
 
@@ -72,10 +71,9 @@ class MainWindow:
                 self.running = False
             elif event.type == UI_BUTTON_CLICKED:
                 if event.dict.get("buttonId") == "New":
-                    if self._editor is None:
-                        self._editor = EditorMenu(self)
-                    self.p = self._editor
+                    self.world.reset()
                     self.world.running = False
+                    self.p = EditorMenu(self)
                 elif event.dict.get("buttonId") == "Load":
                     # TODO: ask user name to load
                     path = os.path.join(os.getcwd(), "data/world_map.json")
