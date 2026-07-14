@@ -66,3 +66,69 @@ class Button(Component):
         text = self.font.render(self.label, self.antialias, self.foreground)
         text_rect = text.get_rect(center=rect.center)
         surface.blit(text, text_rect)
+
+
+class TextInput(Component):
+    def __init__(
+        self,
+        font: pygame.font.Font,
+        foreground: pygame.Color,
+        background: pygame.Color,
+        cursor_color: pygame.Color,
+        max_length: int = 30,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.font = font
+        self.foreground = foreground
+        self.background = background
+        self.cursor_color = cursor_color
+        self.max_length = max_length
+        self.text = ""
+        self.active = True
+        self._cursor_timer = 0
+        self._cursor_visible = True
+
+    def get_text(self):
+        return self.text
+
+    def set_text(self, value: str):
+        self.text = value[:self.max_length]
+
+    def clear(self):
+        self.text = ""
+
+    def handle_event(self, event: pygame.event.EventType) -> str | None:
+        if not self.active:
+            return None
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                return self.text
+            elif event.key == pygame.K_BACKSPACE:
+                self.text = self.text[:-1]
+            elif event.unicode and event.unicode.isprintable():
+                if len(self.text) < self.max_length:
+                    self.text += event.unicode
+        return None
+
+    def render(self, surface: pygame.Surface, position=(0, 0)):
+        pygame.draw.rect(surface, self.background, self.rect)
+        pygame.draw.rect(surface, self.cursor_color, self.rect, 2)
+
+        display_text = self.text
+        text_surf = self.font.render(display_text, True, self.foreground)
+        text_rect = text_surf.get_rect(midleft=(self.rect.x + 8, self.rect.centery))
+        surface.blit(text_surf, text_rect)
+
+        if self.active and self._cursor_visible:
+            cursor_x = text_rect.right + 2
+            cursor_y1 = self.rect.y + 6
+            cursor_y2 = self.rect.bottom - 6
+            pygame.draw.line(surface, self.cursor_color, (cursor_x, cursor_y1), (cursor_x, cursor_y2), 2)
+
+    def update(self, event: pygame.event.EventType):
+        self._cursor_timer += 1
+        if self._cursor_timer >= 30:
+            self._cursor_timer = 0
+            self._cursor_visible = not self._cursor_visible
