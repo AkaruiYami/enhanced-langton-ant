@@ -91,6 +91,8 @@ class EditorMenu(Menu):
         self._entity_types = self._load_entity_types()
         self._save_button = _construct_button("Save")
         self._load_button = _construct_button("Load")
+        self._panel_buttons: list[pygame.Rect] = []
+        self._panel_rect = pygame.Rect(0, 0, 0, 0)
 
     def _load_entity_types(self):
         from core.registry import AntRegistry, TileRegistry
@@ -115,24 +117,20 @@ class EditorMenu(Menu):
             return
         if event.type == pygame.MOUSEBUTTONDOWN:
             coor = pygame.mouse.get_pos()
+            if self._panel_rect.collidepoint(coor):
+                return
             grid = World.point_to_grid(coor)
-            # Check Save/Load button clicks
             if self._save_button.rect.collidepoint(coor):
                 self._save_map()
-                print("Map saved.")
                 return
             if self._load_button.rect.collidepoint(coor):
                 self._load_map()
-                print("Map loaded.")
                 return
             if self.selected_entity:
                 self._place_entity(grid)
-            print(f"Mouse click at: {grid} -> {coor}")
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_a:
                 self._is_ant_panel_active = not self._is_ant_panel_active
-                _status = "actived" if self._is_ant_panel_active else "deactivated"
-                print(f"Ant panel is {_status}")
 
     def _place_entity(self, grid):
         gx, gy = int(grid.x), int(grid.y)
@@ -187,17 +185,19 @@ class EditorMenu(Menu):
         height = _size[1] // 4
         width = _size[0]
 
+        self._panel_rect = pygame.Rect(0, _size[1] - height, width, height)
         _surface = pygame.Surface((width, height))
         _surface.fill(HTMLColor.PURPLE)
 
-        # TODO: properly draw the entity type buttons
         font = pygame.font.Font(None, 25)
         x = 10
         y = 10
         max_per_row = max(1, width // 120)
         entities = self._entity_types["ant"] + self._entity_types["tile"]
+        self._panel_buttons.clear()
         for idx, ent_type in enumerate(entities):
             btn_rect = pygame.Rect(x, y, 100, 40)
+            self._panel_buttons.append(btn_rect.copy())
             pygame.draw.rect(_surface, HTMLColor.WHITE, btn_rect)
             txt = font.render(ent_type, True, HTMLColor.BLACK)
             _surface.blit(txt, (x + 10, y + 10))
@@ -210,20 +210,14 @@ class EditorMenu(Menu):
 
     def _handle_panel_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_x, mouse_y = pygame.mouse.get_pos()
-            panel_top = self.surface.get_size()[1] - self.surface.get_size()[1] // 4
-            if mouse_y >= panel_top:
-                rel_x = mouse_x - 10
-                rel_y = mouse_y - panel_top + 10
-                max_per_row = max(1, self.surface.get_size()[0] // 120)
-                col = rel_x // 120
-                row = rel_y // 50
-                idx = row * max_per_row + col
-                entities = self._entity_types["ant"] + self._entity_types["tile"]
-                if 0 <= idx < len(entities):
-                    self.selected_entity = entities[idx]
-                    print(f"Selected entity: {self.selected_entity}")
-                    self._is_ant_panel_active = False
+            mouse_pos = event.pos
+            for idx, rect in enumerate(self._panel_buttons):
+                if rect.collidepoint(mouse_pos):
+                    entities = self._entity_types["ant"] + self._entity_types["tile"]
+                    if idx < len(entities):
+                        self.selected_entity = entities[idx]
+                        self._is_ant_panel_active = False
+                    break
 
     def _render_buttons(self):
         self._save_button.rect.topleft = (10, 10)
