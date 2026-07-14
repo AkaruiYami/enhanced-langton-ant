@@ -92,7 +92,6 @@ class EditorMenu(Menu):
         self._save_button = _construct_button("Save")
         self._load_button = _construct_button("Load")
         self._panel_buttons: list[pygame.Rect] = []
-        self._panel_rect = pygame.Rect(0, 0, 0, 0)
 
     def _load_entity_types(self):
         from core.registry import AntRegistry, TileRegistry
@@ -118,8 +117,6 @@ class EditorMenu(Menu):
             return
         if event.type == pygame.MOUSEBUTTONDOWN:
             coor = pygame.mouse.get_pos()
-            if self._panel_rect.collidepoint(coor):
-                return
             grid = World.point_to_grid(coor)
             if self._save_button.rect.collidepoint(coor):
                 self._save_map()
@@ -233,7 +230,6 @@ class EditorMenu(Menu):
         width = _size[0]
         panel_y = _size[1] - height
 
-        self._panel_rect = pygame.Rect(0, panel_y, width, height)
         _surface = pygame.Surface((width, height))
         _surface.fill(HTMLColor.PURPLE)
 
