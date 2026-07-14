@@ -198,8 +198,9 @@ class EditorMenu(Menu):
         _size = self.surface.get_size()
         height = _size[1] // 4
         width = _size[0]
+        panel_y = _size[1] - height
 
-        self._panel_rect = pygame.Rect(0, _size[1] - height, width, height)
+        self._panel_rect = pygame.Rect(0, panel_y, width, height)
         _surface = pygame.Surface((width, height))
         _surface.fill(HTMLColor.PURPLE)
 
@@ -210,9 +211,9 @@ class EditorMenu(Menu):
         entities = self._entity_types["ant"] + self._entity_types["tile"]
         self._panel_buttons.clear()
         for idx, ent_type in enumerate(entities):
-            btn_rect = pygame.Rect(x, y, 100, 40)
+            btn_rect = pygame.Rect(x, y + panel_y, 100, 40)
             self._panel_buttons.append(btn_rect.copy())
-            pygame.draw.rect(_surface, HTMLColor.WHITE, btn_rect)
+            pygame.draw.rect(_surface, HTMLColor.WHITE, pygame.Rect(x, y, 100, 40))
             txt = font.render(ent_type, True, HTMLColor.BLACK)
             _surface.blit(txt, (x + 10, y + 10))
             x += 120
@@ -220,7 +221,7 @@ class EditorMenu(Menu):
                 x = 10
                 y += 50
 
-        self.surface.blit(_surface, (0, _size[1] - height))
+        self.surface.blit(_surface, (0, panel_y))
 
     def _handle_panel_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
