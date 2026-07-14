@@ -46,6 +46,7 @@ class RadiationAnt(Ant):
         self.live -= 1
         if self.live == 0:
             world.ants.remove(self)
+            return
         tile = world.get_tile(self.position)
         dx, dy = tile.get_direction()
 

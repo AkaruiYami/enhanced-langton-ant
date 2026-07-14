@@ -196,7 +196,10 @@ class EditorMenu(Menu):
             entity_cls = TileRegistry.get(self.selected_entity)
         if entity_cls is None:
             return
-        color = entity_cls().color
+        if self.selected_entity in self._entity_types["ant"]:
+            color = entity_cls(Vector2(0, 0)).color
+        else:
+            color = entity_cls().color
         alpha_color = pygame.Color(color.r, color.g, color.b, 128)
         if self.selected_entity in self._entity_types["ant"]:
             pygame.draw.circle(ghost, alpha_color, (cell_size // 2, cell_size // 2), cell_size // 2)

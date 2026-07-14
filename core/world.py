@@ -22,7 +22,7 @@ class World:
 
     def update(self):
         if self.running:
-            for ant in self.ants:
+            for ant in self.ants[:]:
                 ant.update(self)
 
     def flip_tile(self, position: Vector2 | tuple[int, int] | list[int], n: int = 1):
