@@ -176,8 +176,6 @@ class EditorMenu(Menu):
         if self.selected_entity is None or self._is_ant_panel_active:
             return
         coor = pygame.mouse.get_pos()
-        if self._panel_rect.collidepoint(coor):
-            return
         cell_size = self.parent.conf.tile_config.resolution
         grid = World.point_to_grid(coor)
         gx, gy = int(grid.x), int(grid.y)
