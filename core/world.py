@@ -65,7 +65,7 @@ class World:
             mid = self.grid_size / 2
             self.ants.extend([ant(mid) for _ in range(count)])
 
-    def load(self, data: dict):
+    def load(self, data: dict, running: bool = True):
         self.running = False
         self.reset()
         self.ants.clear()
@@ -82,4 +82,4 @@ class World:
             if tile_cls:
                 x, y = tile_info["position"]
                 self.tiles[y][x] = tile_cls()
-        self.running = True
+        self.running = running
