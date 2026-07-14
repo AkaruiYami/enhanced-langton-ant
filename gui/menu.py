@@ -253,4 +253,14 @@ class EditorMenu(Menu):
         self.parent.world.load(data)
 
     def _load_map(self):
-        pass
+        path = os.path.join(os.getcwd(), "data", "world_map.json")
+        if not os.path.exists(path):
+            return
+        with open(path, "r") as f:
+            data = json.load(f)
+        self.parent.world.load(data)
+        self.ants = list(self.parent.world.ants)
+        self.tiles = {}
+        for y, row in enumerate(self.parent.world.tiles):
+            for x, tile in enumerate(row):
+                self.tiles[(x, y)] = tile
