@@ -104,8 +104,9 @@ class EditorMenu(Menu):
 
     def render(self, surface: pygame.Surface, position=(0, 0)):
         self.surface.fill(HTMLColor.WHITE)
-        self._render_grid_lines()
         self._render_entities()
+        self._render_grid_lines()
+        self._render_ghost()
         if self._is_ant_panel_active:
             self._render_selection_panel()
         self._render_buttons()
@@ -173,6 +174,35 @@ class EditorMenu(Menu):
                 (0, y),
                 (grid_size.x, y),
             )
+
+    def _render_ghost(self):
+        if self.selected_entity is None or self._is_ant_panel_active:
+            return
+        coor = pygame.mouse.get_pos()
+        if self._panel_rect.collidepoint(coor):
+            return
+        cell_size = self.parent.conf.tile_config.resolution
+        grid = World.point_to_grid(coor)
+        gx, gy = int(grid.x), int(grid.y)
+        grid_w = self.parent.conf.grid_size[0]
+        grid_h = self.parent.conf.grid_size[1]
+        if gx < 0 or gx >= grid_w or gy < 0 or gy >= grid_h:
+            return
+        ghost = pygame.Surface((cell_size, cell_size), pygame.SRCALPHA)
+        entity_cls = None
+        if self.selected_entity in self._entity_types["ant"]:
+            entity_cls = AntRegistry.get(self.selected_entity)
+        elif self.selected_entity in self._entity_types["tile"]:
+            entity_cls = TileRegistry.get(self.selected_entity)
+        if entity_cls is None:
+            return
+        color = entity_cls().color
+        alpha_color = pygame.Color(color.r, color.g, color.b, 128)
+        if self.selected_entity in self._entity_types["ant"]:
+            pygame.draw.circle(ghost, alpha_color, (cell_size // 2, cell_size // 2), cell_size // 2)
+        else:
+            pygame.draw.rect(ghost, alpha_color, (0, 0, cell_size, cell_size))
+        self.surface.blit(ghost, (gx * cell_size, gy * cell_size))
 
     def _render_entities(self):
         cell_size = self.parent.conf.tile_config.resolution
