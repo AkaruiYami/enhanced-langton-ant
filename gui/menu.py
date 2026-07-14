@@ -4,7 +4,6 @@ import pygame
 from common import Alignment
 from common.constant import HTMLColor
 from common.math import Vector2
-from core.ant import Ant
 from core.world import World
 from gui.component import Button
 from gui.layout import Column, Row
@@ -89,8 +88,6 @@ class EditorMenu(Menu):
         self.surface = pygame.Surface(parent.screen.get_size())
         self._is_ant_panel_active = False
         self.selected_entity = None
-        self.ants: list[Ant] = []
-        self.tiles = {}
         self._entity_types = self._load_entity_types()
         self._save_button = _construct_button("Save")
         self._load_button = _construct_button("Load")
@@ -138,12 +135,13 @@ class EditorMenu(Menu):
                 print(f"Ant panel is {_status}")
 
     def _place_entity(self, grid):
+        gx, gy = int(grid.x), int(grid.y)
         if self.selected_entity in self._entity_types["ant"]:
             ant = AntRegistry.get(self.selected_entity)
-            self.ants.append(ant(grid))
+            self.parent.world.ants.append(ant(grid))
         elif self.selected_entity in self._entity_types["tile"]:
             tile = TileRegistry.get(self.selected_entity)
-            self.tiles[tuple(grid)] = tile()
+            self.parent.world.tiles[gy][gx] = tile()
 
     def _render_grid_lines(self):
         grid_size = Vector2(*self.parent.conf.grid_size)
@@ -166,17 +164,18 @@ class EditorMenu(Menu):
 
     def _render_entities(self):
         cell_size = self.parent.conf.tile_config.resolution
-        for grid, tile in self.tiles.items():
-            x, y = grid
-            rect = pygame.Rect(
-                x * cell_size,
-                y * cell_size,
-                cell_size,
-                cell_size,
-            )
-            pygame.draw.rect(self.surface, tile.color, rect)
+        tiles = self.parent.world.tiles
+        for y, row in enumerate(tiles):
+            for x, tile in enumerate(row):
+                rect = pygame.Rect(
+                    x * cell_size,
+                    y * cell_size,
+                    cell_size,
+                    cell_size,
+                )
+                pygame.draw.rect(self.surface, tile.color, rect)
 
-        for ant in self.ants:
+        for ant in self.parent.world.ants:
             ax, ay = ant.position
             center_x = ax * cell_size + cell_size // 2
             center_y = ay * cell_size + cell_size // 2
@@ -233,18 +232,20 @@ class EditorMenu(Menu):
         self._load_button.render(self.surface)
 
     def _save_map(self):
-        # TODO: ask user what name should it use to save the map
         ants_data = [
             {
                 "type": ant.__class__.__name__,
                 "position": [int(ant.position[0]), int(ant.position[1])],
             }
-            for ant in self.ants
+            for ant in self.parent.world.ants
         ]
-        tiles_data = [
-            {"type": tile.__class__.__name__, "position": [int(pos[0]), int(pos[1])]}
-            for pos, tile in self.tiles.items()
-        ]
+        tiles_data = []
+        for y, row in enumerate(self.parent.world.tiles):
+            for x, tile in enumerate(row):
+                tiles_data.append({
+                    "type": tile.__class__.__name__,
+                    "position": [x, y],
+                })
         data = {"ants": ants_data, "tiles": tiles_data}
         path = os.path.join(os.getcwd(), "data", "world_map.json")
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -262,8 +263,3 @@ class EditorMenu(Menu):
             data = json.load(f)
         self.parent.world.load(data)
         self.parent._editor = None
-        self.ants = list(self.parent.world.ants)
-        self.tiles = {}
-        for y, row in enumerate(self.parent.world.tiles):
-            for x, tile in enumerate(row):
-                self.tiles[(x, y)] = tile
