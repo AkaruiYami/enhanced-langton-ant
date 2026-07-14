@@ -246,7 +246,8 @@ class EditorMenu(Menu):
             for pos, tile in self.tiles.items()
         ]
         data = {"ants": ants_data, "tiles": tiles_data}
-        path = os.path.join(os.getcwd(), "data/world_map.json")
+        path = os.path.join(os.getcwd(), "data", "world_map.json")
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w") as f:
             json.dump(data, f, indent=2)
         self.parent._menu = False
