@@ -91,6 +91,8 @@ class EditorMenu(Menu):
         self._entity_types = self._load_entity_types()
         self._save_button = _construct_button("Save")
         self._load_button = _construct_button("Load")
+        self._run_button = _construct_button("Run")
+        self._exit_button = _construct_button("Exit")
         self._panel_buttons: list[pygame.Rect] = []
 
     def _load_entity_types(self):
@@ -123,6 +125,12 @@ class EditorMenu(Menu):
                 return
             if self._load_button.rect.collidepoint(coor):
                 self._load_map()
+                return
+            if self._run_button.rect.collidepoint(coor):
+                self._run_simulation()
+                return
+            if self._exit_button.rect.collidepoint(coor):
+                self._exit_to_menu()
                 return
             if event.button == 3:
                 self._remove_entity_at(grid)
@@ -264,8 +272,12 @@ class EditorMenu(Menu):
     def _render_buttons(self):
         self._save_button.rect.topleft = (10, 10)
         self._load_button.rect.topleft = (10, 70)
+        self._run_button.rect.topleft = (10, 130)
+        self._exit_button.rect.topleft = (10, 190)
         self._save_button.render(self.surface)
         self._load_button.render(self.surface)
+        self._run_button.render(self.surface)
+        self._exit_button.render(self.surface)
 
     def _save_map(self):
         ants_data = [
@@ -297,3 +309,10 @@ class EditorMenu(Menu):
         with open(path, "r") as f:
             data = json.load(f)
         self.parent.world.load(data, running=False)
+
+    def _run_simulation(self):
+        self.parent._menu = False
+        self.parent.world.running = True
+
+    def _exit_to_menu(self):
+        self.parent.p = FrontMenu(self.parent)
