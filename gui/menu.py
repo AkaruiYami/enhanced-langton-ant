@@ -5,12 +5,13 @@ from common import Alignment
 from common.constant import HTMLColor
 from common.math import Vector2
 from core.world import World
-from gui.component import Button
+from gui.component import Button, TextInput
 from gui.layout import Column, Row
 import json
 import os
 
 from core.registry import AntRegistry, TileRegistry
+from gui.dialog import LoadDialog
 
 if TYPE_CHECKING:
     from gui import MainWindow
@@ -44,6 +45,7 @@ class FrontMenu(Menu):
     def __init__(self, parent):
         super().__init__(parent)
         self.surface = self._construct_menu()
+        self._load_dialog = LoadDialog(parent.screen.get_size())
 
     def _construct_menu(self):
         row = Row(alignment=Alignment.CENTER, rect=self.parent.screen.get_rect())
@@ -72,16 +74,29 @@ class FrontMenu(Menu):
 
         surface.blit(bg, (0, 0))
         self.surface.render(surface, position)
+        if self._load_dialog.active:
+            self._load_dialog.render(surface)
 
     def update(self, event):
+        if self._load_dialog.active:
+            self._load_dialog.handle_event(event, on_load=self._do_load)
+            return
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self._load_button.rect.collidepoint(event.pos):
+                self._load_dialog.open()
+                return
         self.surface.update(event)
 
+    def _do_load(self, filename: str):
+        path = os.path.join(os.getcwd(), "data", f"{filename}.json")
+        if not os.path.exists(path):
+            return
+        with open(path, "r") as f:
+            data = json.load(f)
+        self.parent.world.load(data)
+        self.parent._menu = False
 
-# TODO: Andd all the ant type into selection panel
-# block the grid underneath the panel from accidental click
-# make this menu appeares when user choose 'New'
-# add save option
-# load the world using the save file. instead
+
 class EditorMenu(Menu):
     def __init__(self, parent) -> None:
         super().__init__(parent)
@@ -94,6 +109,13 @@ class EditorMenu(Menu):
         self._run_button = _construct_button("Run")
         self._exit_button = _construct_button("Exit")
         self._panel_buttons: list[pygame.Rect] = []
+        self._dialog_mode: str | None = None
+        self._text_input: TextInput | None = None
+        self._load_dialog = LoadDialog(parent.screen.get_size())
+        self._pending_save_name: str = ""
+        self._confirm_yes: pygame.Rect | None = None
+        self._confirm_no: pygame.Rect | None = None
+        self._dialog_font = pygame.font.Font(None, 25)
 
     def _load_entity_types(self):
         from core.registry import AntRegistry, TileRegistry
@@ -111,9 +133,18 @@ class EditorMenu(Menu):
         if self._is_ant_panel_active:
             self._render_selection_panel()
         self._render_buttons()
+        if self._dialog_mode is not None:
+            self._render_dialog()
+        self._load_dialog.render(self.surface)
         surface.blit(self.surface, position)
 
     def update(self, event: pygame.event.EventType):
+        if self._load_dialog.active:
+            self._load_dialog.handle_event(event, on_load=self._do_load)
+            return
+        if self._dialog_mode is not None:
+            self._handle_dialog_event(event)
+            return
         if self._is_ant_panel_active:
             self._handle_panel_event(event)
             return
@@ -121,10 +152,10 @@ class EditorMenu(Menu):
             coor = pygame.mouse.get_pos()
             grid = World.point_to_grid(coor)
             if self._save_button.rect.collidepoint(coor):
-                self._save_map()
+                self._open_save_dialog()
                 return
             if self._load_button.rect.collidepoint(coor):
-                self._load_map()
+                self._load_dialog.open()
                 return
             if self._run_button.rect.collidepoint(coor):
                 self._run_simulation()
@@ -269,17 +300,7 @@ class EditorMenu(Menu):
                         self._is_ant_panel_active = False
                     break
 
-    def _render_buttons(self):
-        self._save_button.rect.topleft = (10, 10)
-        self._load_button.rect.topleft = (10, 70)
-        self._run_button.rect.topleft = (10, 130)
-        self._exit_button.rect.topleft = (10, 190)
-        self._save_button.render(self.surface)
-        self._load_button.render(self.surface)
-        self._run_button.render(self.surface)
-        self._exit_button.render(self.surface)
-
-    def _save_map(self):
+    def _get_save_data(self) -> dict:
         ants_data = [
             {
                 "type": ant.__class__.__name__,
@@ -294,21 +315,153 @@ class EditorMenu(Menu):
                     "type": tile.__class__.__name__,
                     "position": [x, y],
                 })
-        data = {"ants": ants_data, "tiles": tiles_data}
-        path = os.path.join(os.getcwd(), "data", "world_map.json")
+        return {"ants": ants_data, "tiles": tiles_data}
+
+    def _open_save_dialog(self):
+        self._dialog_mode = "save"
+        screen_w, screen_h = self.parent.screen.get_size()
+        input_rect = pygame.Rect(screen_w // 2 - 150, screen_h // 2 - 25, 300, 40)
+        self._text_input = TextInput(
+            font=self._dialog_font,
+            foreground=pygame.Color(HTMLColor.BLACK),
+            background=pygame.Color(HTMLColor.WHITE),
+            cursor_color=pygame.Color(HTMLColor.PURPLE),
+            max_length=30,
+            rect=input_rect,
+        )
+
+    def _open_confirm_dialog(self, filename: str):
+        self._dialog_mode = "confirm"
+        self._pending_save_name = filename
+
+    def _close_dialog(self):
+        self._dialog_mode = None
+        self._text_input = None
+        self._pending_save_name = ""
+
+    def _do_save(self, filename: str):
+        data = self._get_save_data()
+        path = os.path.join(os.getcwd(), "data", f"{filename}.json")
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w") as f:
             json.dump(data, f, indent=2)
         self.parent._menu = False
         self.parent.world.load(data)
 
-    def _load_map(self):
-        path = os.path.join(os.getcwd(), "data", "world_map.json")
+    def _do_load(self, filename: str):
+        path = os.path.join(os.getcwd(), "data", f"{filename}.json")
         if not os.path.exists(path):
             return
         with open(path, "r") as f:
             data = json.load(f)
         self.parent.world.load(data, running=False)
+
+    def _render_dialog(self):
+        overlay = pygame.Surface(self.surface.get_size(), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 128))
+        self.surface.blit(overlay, (0, 0))
+
+        screen_w, screen_h = self.parent.screen.get_size()
+        dlg_w, dlg_h = 400, 250
+        dlg_rect = pygame.Rect(screen_w // 2 - dlg_w // 2, screen_h // 2 - dlg_h // 2, dlg_w, dlg_h)
+        pygame.draw.rect(self.surface, pygame.Color(HTMLColor.PURPLE), dlg_rect)
+        pygame.draw.rect(self.surface, pygame.Color(HTMLColor.WHITE), dlg_rect, 2)
+
+        if self._dialog_mode == "save":
+            self._render_save_dialog(dlg_rect)
+        elif self._dialog_mode == "confirm":
+            self._render_confirm_dialog(dlg_rect)
+
+    def _render_save_dialog(self, dlg_rect: pygame.Rect):
+        title = self._dialog_font.render("Save As:", True, pygame.Color(HTMLColor.WHITE))
+        self.surface.blit(title, (dlg_rect.x + 20, dlg_rect.y + 15))
+
+        if self._text_input:
+            self._text_input.rect.x = dlg_rect.x + 20
+            self._text_input.rect.y = dlg_rect.y + 50
+            self._text_input.render(self.surface)
+
+        btn_y = dlg_rect.bottom - 55
+        save_btn_rect = pygame.Rect(dlg_rect.x + 60, btn_y, 100, 40)
+        cancel_btn_rect = pygame.Rect(dlg_rect.x + 200, btn_y, 100, 40)
+        self._confirm_yes = save_btn_rect
+        self._confirm_no = cancel_btn_rect
+
+        mouse_pos = pygame.mouse.get_pos()
+        for rect, label in [(save_btn_rect, "Save"), (cancel_btn_rect, "Cancel")]:
+            color = pygame.Color(HTMLColor.VIOLET) if rect.collidepoint(mouse_pos) else pygame.Color(HTMLColor.WHITE)
+            pygame.draw.rect(self.surface, color, rect)
+            txt = self._dialog_font.render(label, True, pygame.Color(HTMLColor.BLACK))
+            self.surface.blit(txt, txt.get_rect(center=rect.center))
+
+    def _render_confirm_dialog(self, dlg_rect: pygame.Rect):
+        msg = self._dialog_font.render(f'Overwrite "{self._pending_save_name}"?', True, pygame.Color(HTMLColor.WHITE))
+        self.surface.blit(msg, (dlg_rect.x + 20, dlg_rect.y + 30))
+
+        btn_y = dlg_rect.bottom - 55
+        yes_btn_rect = pygame.Rect(dlg_rect.x + 80, btn_y, 100, 40)
+        no_btn_rect = pygame.Rect(dlg_rect.x + 220, btn_y, 100, 40)
+        self._confirm_yes = yes_btn_rect
+        self._confirm_no = no_btn_rect
+
+        mouse_pos = pygame.mouse.get_pos()
+        for rect, label in [(yes_btn_rect, "Yes"), (no_btn_rect, "No")]:
+            color = pygame.Color(HTMLColor.VIOLET) if rect.collidepoint(mouse_pos) else pygame.Color(HTMLColor.WHITE)
+            pygame.draw.rect(self.surface, color, rect)
+            txt = self._dialog_font.render(label, True, pygame.Color(HTMLColor.BLACK))
+            self.surface.blit(txt, txt.get_rect(center=rect.center))
+
+    def _handle_dialog_event(self, event: pygame.event.EventType):
+        if self._dialog_mode == "save":
+            self._handle_save_dialog_event(event)
+        elif self._dialog_mode == "confirm":
+            self._handle_confirm_dialog_event(event)
+
+    def _handle_save_dialog_event(self, event: pygame.event.EventType):
+        if self._text_input:
+            result = self._text_input.handle_event(event)
+            if result is not None and result.strip():
+                filename = result.strip()
+                data_dir = os.path.join(os.getcwd(), "data")
+                path = os.path.join(data_dir, f"{filename}.json")
+                if os.path.exists(path):
+                    self._open_confirm_dialog(filename)
+                else:
+                    self._do_save(filename)
+                    self._close_dialog()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                self._close_dialog()
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self._confirm_yes and self._confirm_yes.collidepoint(event.pos):
+                if self._text_input:
+                    filename = self._text_input.get_text().strip()
+                    if filename:
+                        self._do_save(filename)
+                        self._close_dialog()
+            if self._confirm_no and self._confirm_no.collidepoint(event.pos):
+                self._close_dialog()
+
+    def _handle_confirm_dialog_event(self, event: pygame.event.EventType):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self._confirm_yes and self._confirm_yes.collidepoint(event.pos):
+                self._do_save(self._pending_save_name)
+                self._close_dialog()
+            if self._confirm_no and self._confirm_no.collidepoint(event.pos):
+                self._dialog_mode = "save"
+                self._pending_save_name = ""
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            self._dialog_mode = "save"
+            self._pending_save_name = ""
+
+    def _render_buttons(self):
+        self._save_button.rect.topleft = (10, 10)
+        self._load_button.rect.topleft = (10, 70)
+        self._run_button.rect.topleft = (10, 130)
+        self._exit_button.rect.topleft = (10, 190)
+        self._save_button.render(self.surface)
+        self._load_button.render(self.surface)
+        self._run_button.render(self.surface)
+        self._exit_button.render(self.surface)
 
     def _run_simulation(self):
         self.parent._menu = False

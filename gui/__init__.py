@@ -1,5 +1,3 @@
-import os
-import json
 import sys
 import random
 from typing import Callable
@@ -74,17 +72,6 @@ class MainWindow:
                     self.world.reset()
                     self.world.running = False
                     self.p = EditorMenu(self)
-                elif event.dict.get("buttonId") == "Load":
-                    # TODO: ask user name to load
-                    path = os.path.join(os.getcwd(), "data/world_map.json")
-                    if not os.path.exists(path):
-                        print("No world_map.json found.")
-                    else:
-                        with open(path, "r") as f:
-                            data = json.load(f)
-                        self.world.load(data)
-                        self._menu = False
-                        print("Loaded world from world_map.json")
                 elif event.dict.get("buttonId") == "Quit":
                     self.running = False
                 else:
