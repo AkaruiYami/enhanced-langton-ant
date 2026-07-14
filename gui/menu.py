@@ -251,6 +251,7 @@ class EditorMenu(Menu):
         with open(path, "w") as f:
             json.dump(data, f, indent=2)
         self.parent._menu = False
+        self.parent._editor = None
         self.parent.world.load(data)
 
     def _load_map(self):
@@ -260,6 +261,7 @@ class EditorMenu(Menu):
         with open(path, "r") as f:
             data = json.load(f)
         self.parent.world.load(data)
+        self.parent._editor = None
         self.ants = list(self.parent.world.ants)
         self.tiles = {}
         for y, row in enumerate(self.parent.world.tiles):
