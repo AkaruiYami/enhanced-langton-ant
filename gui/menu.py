@@ -126,11 +126,15 @@ class EditorMenu(Menu):
             if self._load_button.rect.collidepoint(coor):
                 self._load_map()
                 return
-            if self.selected_entity:
+            if event.button == 3:
+                self._remove_entity_at(grid)
+            elif event.button == 1 and self.selected_entity:
                 self._place_entity(grid)
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_a:
                 self._is_ant_panel_active = not self._is_ant_panel_active
+            elif event.key == pygame.K_ESCAPE:
+                self.selected_entity = None
 
     def _place_entity(self, grid):
         gx, gy = int(grid.x), int(grid.y)
@@ -140,6 +144,16 @@ class EditorMenu(Menu):
         elif self.selected_entity in self._entity_types["tile"]:
             tile = TileRegistry.get(self.selected_entity)
             self.parent.world.tiles[gy][gx] = tile()
+
+    def _remove_entity_at(self, grid):
+        gx, gy = int(grid.x), int(grid.y)
+        self.parent.world.ants = [
+            a for a in self.parent.world.ants
+            if int(a.position[0]) != gx or int(a.position[1]) != gy
+        ]
+        tiles = self.parent.world.tiles
+        if 0 <= gy < len(tiles) and 0 <= gx < len(tiles[0]):
+            tiles[gy][gx] = TileRegistry.at(0)[1]()
 
     def _render_grid_lines(self):
         grid_size = Vector2(*self.parent.conf.grid_size)
