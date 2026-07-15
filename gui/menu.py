@@ -4,7 +4,6 @@ import pygame
 from common import Alignment
 from common.constant import HTMLColor
 from common.math import Vector2
-from core.world import World
 from gui.component import Button, TextInput
 from gui.layout import Column, Row
 import json
@@ -117,6 +116,11 @@ class EditorMenu(Menu):
         self._confirm_no: pygame.Rect | None = None
         self._dialog_font = pygame.font.Font(None, 25)
         self._show_buttons = False
+        self._cam_x: float = 0.0
+        self._cam_y: float = 0.0
+        self._zoom: float = 1.0
+        self._panning: bool = False
+        self._pan_start: tuple[int, int] | None = None
 
     def _load_entity_types(self):
         from core.registry import AntRegistry, TileRegistry
@@ -125,6 +129,20 @@ class EditorMenu(Menu):
             "ant": AntRegistry.names(),
             "tile": TileRegistry.names(),
         }
+
+    def _world_to_screen(self, grid_x: float, grid_y: float) -> tuple[float, float]:
+        cell_size = self.parent.conf.tile_config.resolution
+        sx = (grid_x * cell_size + self._cam_x) * self._zoom
+        sy = (grid_y * cell_size + self._cam_y) * self._zoom
+        return sx, sy
+
+    def _screen_to_world(self, screen_x: float, screen_y: float) -> Vector2:
+        cell_size = self.parent.conf.tile_config.resolution
+        wx = screen_x / self._zoom - self._cam_x
+        wy = screen_y / self._zoom - self._cam_y
+        gx = int(wx / cell_size)
+        gy = int(wy / cell_size)
+        return Vector2(gx, gy)
 
     def render(self, surface: pygame.Surface, position=(0, 0)):
         self.surface.fill(HTMLColor.WHITE)
@@ -152,9 +170,21 @@ class EditorMenu(Menu):
         if self._is_ant_panel_active:
             self._handle_panel_event(event)
             return
+        if event.type == pygame.MOUSEWHEEL:
+            mx, my = pygame.mouse.get_pos()
+            old_zoom = self._zoom
+            self._zoom *= 1.1 if event.y > 0 else 1 / 1.1
+            self._zoom = max(0.2, min(5.0, self._zoom))
+            self._cam_x = mx * (1 - self._zoom / old_zoom) + self._cam_x * (self._zoom / old_zoom)
+            self._cam_y = my * (1 - self._zoom / old_zoom) + self._cam_y * (self._zoom / old_zoom)
+            return
         if event.type == pygame.MOUSEBUTTONDOWN:
             coor = pygame.mouse.get_pos()
-            grid = World.point_to_grid(coor)
+            if event.button == 2:
+                self._panning = True
+                self._pan_start = coor
+                return
+            grid = self._screen_to_world(*coor)
             if self._show_buttons:
                 if self._save_button.rect.collidepoint(coor):
                     self._open_save_dialog()
@@ -172,6 +202,20 @@ class EditorMenu(Menu):
                 self._remove_entity_at(grid)
             elif event.button == 1 and self.selected_entity:
                 self._place_entity(grid)
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 2:
+                self._panning = False
+                self._pan_start = None
+                return
+        elif event.type == pygame.MOUSEMOTION:
+            if self._panning and self._pan_start is not None:
+                coor = pygame.mouse.get_pos()
+                dx = coor[0] - self._pan_start[0]
+                dy = coor[1] - self._pan_start[1]
+                self._cam_x += dx / self._zoom
+                self._cam_y += dy / self._zoom
+                self._pan_start = coor
+                return
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_a:
                 self._is_ant_panel_active = not self._is_ant_panel_active
@@ -199,36 +243,35 @@ class EditorMenu(Menu):
             tiles[gy][gx] = TileRegistry.at(0)[1]()
 
     def _render_grid_lines(self):
-        grid_size = Vector2(*self.parent.conf.grid_size)
+        grid_w, grid_h = self.parent.conf.grid_size
         cell_size = self.parent.conf.tile_config.resolution
-        grid_size *= cell_size
-        for x in range(0, grid_size.x, cell_size):
-            pygame.draw.line(
-                self.surface,
-                HTMLColor.BLACK,
-                (x, 0),
-                (x, grid_size.y),
-            )
-        for y in range(0, grid_size.y, cell_size):
-            pygame.draw.line(
-                self.surface,
-                HTMLColor.BLACK,
-                (0, y),
-                (grid_size.x, y),
-            )
+        screen_w, screen_h = self.surface.get_size()
+        for x in range(grid_w + 1):
+            sx, _ = self._world_to_screen(x, 0)
+            sx = int(sx)
+            if sx < 0 or sx > screen_w:
+                continue
+            pygame.draw.line(self.surface, HTMLColor.BLACK, (sx, 0), (sx, screen_h))
+        for y in range(grid_h + 1):
+            _, sy = self._world_to_screen(0, y)
+            sy = int(sy)
+            if sy < 0 or sy > screen_h:
+                continue
+            pygame.draw.line(self.surface, HTMLColor.BLACK, (0, sy), (screen_w, sy))
 
     def _render_ghost(self):
         if self.selected_entity is None or self._is_ant_panel_active:
             return
         coor = pygame.mouse.get_pos()
         cell_size = self.parent.conf.tile_config.resolution
-        grid = World.point_to_grid(coor)
-        gx, gy = int(grid.x), int(grid.y)
+        grid = self._screen_to_world(*coor)
+        gx, gy = grid.x, grid.y
         grid_w = self.parent.conf.grid_size[0]
         grid_h = self.parent.conf.grid_size[1]
         if gx < 0 or gx >= grid_w or gy < 0 or gy >= grid_h:
             return
-        ghost = pygame.Surface((cell_size, cell_size), pygame.SRCALPHA)
+        size = max(1, int(cell_size * self._zoom))
+        ghost = pygame.Surface((size, size), pygame.SRCALPHA)
         entity_cls = None
         if self.selected_entity in self._entity_types["ant"]:
             entity_cls = AntRegistry.get(self.selected_entity)
@@ -242,30 +285,34 @@ class EditorMenu(Menu):
             color = entity_cls().color
         alpha_color = pygame.Color(color.r, color.g, color.b, 128)
         if self.selected_entity in self._entity_types["ant"]:
-            pygame.draw.circle(ghost, alpha_color, (cell_size // 2, cell_size // 2), cell_size // 2)
+            pygame.draw.circle(ghost, alpha_color, (size // 2, size // 2), size // 2)
         else:
-            pygame.draw.rect(ghost, alpha_color, (0, 0, cell_size, cell_size))
-        self.surface.blit(ghost, (gx * cell_size, gy * cell_size))
+            pygame.draw.rect(ghost, alpha_color, (0, 0, size, size))
+        sx, sy = self._world_to_screen(gx, gy)
+        self.surface.blit(ghost, (int(sx), int(sy)))
 
     def _render_entities(self):
         cell_size = self.parent.conf.tile_config.resolution
+        screen_w, screen_h = self.surface.get_size()
         tiles = self.parent.world.tiles
+        grid_h = len(tiles)
+        grid_w = len(tiles[0]) if grid_h > 0 else 0
         for y, row in enumerate(tiles):
             for x, tile in enumerate(row):
-                rect = pygame.Rect(
-                    x * cell_size,
-                    y * cell_size,
-                    cell_size,
-                    cell_size,
-                )
+                sx, sy = self._world_to_screen(x, y)
+                size = cell_size * self._zoom
+                if sx + size < 0 or sx > screen_w or sy + size < 0 or sy > screen_h:
+                    continue
+                rect = pygame.Rect(int(sx), int(sy), int(size), int(size))
                 pygame.draw.rect(self.surface, tile.color, rect)
 
         for ant in self.parent.world.ants:
             ax, ay = ant.position
-            center_x = ax * cell_size + cell_size // 2
-            center_y = ay * cell_size + cell_size // 2
-            radius = cell_size // 2
-            pygame.draw.circle(self.surface, ant.color, (center_x, center_y), radius)
+            sx, sy = self._world_to_screen(ax + 0.5, ay + 0.5)
+            radius = int(cell_size * self._zoom / 2)
+            if sx + radius < 0 or sx - radius > screen_w or sy + radius < 0 or sy - radius > screen_h:
+                continue
+            pygame.draw.circle(self.surface, ant.color, (int(sx), int(sy)), radius)
 
     def _render_selection_panel(self):
         _size = self.surface.get_size()
@@ -471,7 +518,7 @@ class EditorMenu(Menu):
 
     def _render_keybind_tips(self):
         font = pygame.font.Font(None, 20)
-        tips = "LMB: place  |  RMB: delete  |  Esc: menu  |  A: panel"
+        tips = "LMB: place  |  RMB: delete  |  Esc: menu  |  A: panel  |  Scroll: zoom  |  MMB: pan"
         text = font.render(tips, True, HTMLColor.WHITE)
         screen_w, screen_h = self.surface.get_size()
         bg_rect = pygame.Rect(0, screen_h - 28, screen_w, 28)
