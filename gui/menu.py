@@ -135,6 +135,8 @@ class EditorMenu(Menu):
             self._render_selection_panel()
         if self._show_buttons:
             self._render_buttons()
+        self._render_keybind_tips()
+        self._render_selected_element()
         if self._dialog_mode is not None:
             self._render_dialog()
         self._load_dialog.render(self.surface)
@@ -466,6 +468,31 @@ class EditorMenu(Menu):
         self._load_button.render(self.surface)
         self._run_button.render(self.surface)
         self._exit_button.render(self.surface)
+
+    def _render_keybind_tips(self):
+        font = pygame.font.Font(None, 20)
+        tips = "LMB: place  |  RMB: delete  |  Esc: menu  |  A: panel"
+        text = font.render(tips, True, HTMLColor.WHITE)
+        screen_w, screen_h = self.surface.get_size()
+        bg_rect = pygame.Rect(0, screen_h - 28, screen_w, 28)
+        bg = pygame.Surface((screen_w, 28), pygame.SRCALPHA)
+        bg.fill(pygame.Color(0, 0, 0, 160))
+        self.surface.blit(bg, bg_rect)
+        text_rect = text.get_rect(center=(screen_w // 2, screen_h - 14))
+        self.surface.blit(text, text_rect)
+
+    def _render_selected_element(self):
+        if self.selected_entity is None:
+            return
+        font = pygame.font.Font(None, 22)
+        text = font.render(f"Selected: {self.selected_entity}", True, HTMLColor.WHITE)
+        screen_w, _ = self.surface.get_size()
+        text_rect = text.get_rect(topright=(screen_w - 10, 10))
+        bg_rect = text_rect.inflate(12, 6)
+        bg = pygame.Surface(bg_rect.size, pygame.SRCALPHA)
+        bg.fill(pygame.Color(0, 0, 0, 160))
+        self.surface.blit(bg, bg_rect)
+        self.surface.blit(text, text_rect)
 
     def _run_simulation(self):
         self.parent._menu = False
