@@ -234,6 +234,9 @@ class EditorMenu(Menu):
 
     def _place_entity(self, grid):
         gx, gy = int(grid.x), int(grid.y)
+        grid_w, grid_h = self.parent.conf.grid_size
+        if gx < 0 or gx >= grid_w or gy < 0 or gy >= grid_h:
+            return
         if self.selected_entity in self._entity_types["ant"]:
             ant = AntRegistry.get(self.selected_entity)
             self.parent.world.ants.append(ant(grid))
@@ -243,6 +246,9 @@ class EditorMenu(Menu):
 
     def _remove_entity_at(self, grid):
         gx, gy = int(grid.x), int(grid.y)
+        grid_w, grid_h = self.parent.conf.grid_size
+        if gx < 0 or gx >= grid_w or gy < 0 or gy >= grid_h:
+            return
         self.parent.world.ants = [
             a for a in self.parent.world.ants
             if int(a.position[0]) != gx or int(a.position[1]) != gy
