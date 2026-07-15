@@ -116,6 +116,7 @@ class EditorMenu(Menu):
         self._confirm_yes: pygame.Rect | None = None
         self._confirm_no: pygame.Rect | None = None
         self._dialog_font = pygame.font.Font(None, 25)
+        self._show_buttons = False
 
     def _load_entity_types(self):
         from core.registry import AntRegistry, TileRegistry
@@ -132,7 +133,8 @@ class EditorMenu(Menu):
         self._render_ghost()
         if self._is_ant_panel_active:
             self._render_selection_panel()
-        self._render_buttons()
+        if self._show_buttons:
+            self._render_buttons()
         if self._dialog_mode is not None:
             self._render_dialog()
         self._load_dialog.render(self.surface)
@@ -151,18 +153,19 @@ class EditorMenu(Menu):
         if event.type == pygame.MOUSEBUTTONDOWN:
             coor = pygame.mouse.get_pos()
             grid = World.point_to_grid(coor)
-            if self._save_button.rect.collidepoint(coor):
-                self._open_save_dialog()
-                return
-            if self._load_button.rect.collidepoint(coor):
-                self._load_dialog.open()
-                return
-            if self._run_button.rect.collidepoint(coor):
-                self._run_simulation()
-                return
-            if self._exit_button.rect.collidepoint(coor):
-                self._exit_to_menu()
-                return
+            if self._show_buttons:
+                if self._save_button.rect.collidepoint(coor):
+                    self._open_save_dialog()
+                    return
+                if self._load_button.rect.collidepoint(coor):
+                    self._load_dialog.open()
+                    return
+                if self._run_button.rect.collidepoint(coor):
+                    self._run_simulation()
+                    return
+                if self._exit_button.rect.collidepoint(coor):
+                    self._exit_to_menu()
+                    return
             if event.button == 3:
                 self._remove_entity_at(grid)
             elif event.button == 1 and self.selected_entity:
@@ -172,6 +175,7 @@ class EditorMenu(Menu):
                 self._is_ant_panel_active = not self._is_ant_panel_active
             elif event.key == pygame.K_ESCAPE:
                 self.selected_entity = None
+                self._show_buttons = not self._show_buttons
 
     def _place_entity(self, grid):
         gx, gy = int(grid.x), int(grid.y)
