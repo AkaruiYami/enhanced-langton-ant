@@ -4,6 +4,7 @@ import pygame
 from common import Alignment
 from common.constant import HTMLColor
 from common.math import Vector2
+from common.paths import get_data_dir
 from gui.component import Button, TextInput
 from gui.layout import Column, Row
 import json
@@ -87,8 +88,8 @@ class FrontMenu(Menu):
         self.surface.update(event)
 
     def _do_load(self, filename: str):
-        path = os.path.join(os.getcwd(), "data", f"{filename}.json")
-        if not os.path.exists(path):
+        path = get_data_dir() / f"{filename}.json"
+        if not path.exists():
             return
         with open(path, "r") as f:
             data = json.load(f)
@@ -405,16 +406,16 @@ class EditorMenu(Menu):
 
     def _do_save(self, filename: str):
         data = self._get_save_data()
-        path = os.path.join(os.getcwd(), "data", f"{filename}.json")
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        data_dir = get_data_dir()
+        path = data_dir / f"{filename}.json"
         with open(path, "w") as f:
             json.dump(data, f, indent=2)
         self.parent._menu = False
         self.parent.world.load(data)
 
     def _do_load(self, filename: str):
-        path = os.path.join(os.getcwd(), "data", f"{filename}.json")
-        if not os.path.exists(path):
+        path = get_data_dir() / f"{filename}.json"
+        if not path.exists():
             return
         with open(path, "r") as f:
             data = json.load(f)
@@ -486,9 +487,9 @@ class EditorMenu(Menu):
             result = self._text_input.handle_event(event)
             if result is not None and result.strip():
                 filename = result.strip()
-                data_dir = os.path.join(os.getcwd(), "data")
-                path = os.path.join(data_dir, f"{filename}.json")
-                if os.path.exists(path):
+                data_dir = get_data_dir()
+                path = data_dir / f"{filename}.json"
+                if path.exists():
                     self._open_confirm_dialog(filename)
                 else:
                     self._do_save(filename)

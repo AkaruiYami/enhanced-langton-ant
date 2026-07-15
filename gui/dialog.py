@@ -2,6 +2,7 @@ from typing import Callable
 import os
 import pygame
 from common.constant import HTMLColor
+from common.paths import get_data_dir
 
 
 class LoadDialog:
@@ -28,8 +29,8 @@ class LoadDialog:
         self._file_buttons.clear()
 
     def _get_saved_files(self) -> list[str]:
-        data_dir = os.path.join(os.getcwd(), "data")
-        if not os.path.isdir(data_dir):
+        data_dir = get_data_dir()
+        if not data_dir.exists():
             return []
         return sorted(
             f[:-5] for f in os.listdir(data_dir)

@@ -3,6 +3,8 @@ from pathlib import Path
 from typing import Optional
 from pydantic import BaseModel, PositiveInt
 
+from common.paths import get_settings_path
+
 
 class AntConfig(BaseModel):
     limit: int
@@ -56,7 +58,7 @@ def load_config(path: str | Path) -> WorldConfig:
 
 
 def get() -> WorldConfig:
-    path = "./settings/dev-settings.json"
+    path = get_settings_path()
     try:
         config = load_config(path)
     except FileNotFoundError:

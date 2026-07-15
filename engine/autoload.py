@@ -3,6 +3,8 @@ import pathlib
 from dataclasses import dataclass
 from importlib import util
 
+from common.paths import get_bundle_dir
+
 logger = logging.getLogger(__name__)
 
 _loaded_paths: set[pathlib.Path] = set()
@@ -17,7 +19,7 @@ class LoadStats:
 
 def load_py_files(directory: str | pathlib.Path) -> LoadStats:
     stats = LoadStats()
-    path = pathlib.Path(directory)
+    path = get_bundle_dir() / pathlib.Path(directory)
 
     for file in path.glob("*.py"):
         if file.name.startswith("_"):

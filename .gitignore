@@ -1,12 +1,15 @@
 # Python-generated files
 __pycache__/
 *.py[oc]
-build/
-dist/
-wheels/
 *.egg-info
 
 # Virtual environments
 .venv
 
+# PyInstaller build artifacts
+build/
+dist/
+*.spec
+
+# Data files (user-specific)
 data/
