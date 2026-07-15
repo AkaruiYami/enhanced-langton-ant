@@ -144,8 +144,17 @@ class EditorMenu(Menu):
         gy = int(wy / cell_size)
         return Vector2(gx, gy)
 
+    def _render_grid_background(self):
+        grid_w, grid_h = self.parent.conf.grid_size
+        cell_size = self.parent.conf.tile_config.resolution
+        x0, y0 = self._world_to_screen(0, 0)
+        x1, y1 = self._world_to_screen(grid_w, grid_h)
+        rect = pygame.Rect(int(x0), int(y0), int(x1 - x0), int(y1 - y0))
+        pygame.draw.rect(self.surface, HTMLColor.WHITE, rect)
+
     def render(self, surface: pygame.Surface, position=(0, 0)):
-        self.surface.fill(HTMLColor.WHITE)
+        self.surface.fill("#808080")
+        self._render_grid_background()
         self._render_entities()
         self._render_grid_lines()
         self._render_ghost()
@@ -244,20 +253,16 @@ class EditorMenu(Menu):
 
     def _render_grid_lines(self):
         grid_w, grid_h = self.parent.conf.grid_size
-        cell_size = self.parent.conf.tile_config.resolution
-        screen_w, screen_h = self.surface.get_size()
+        x0, y0 = self._world_to_screen(0, 0)
+        x1, y1 = self._world_to_screen(grid_w, grid_h)
         for x in range(grid_w + 1):
             sx, _ = self._world_to_screen(x, 0)
             sx = int(sx)
-            if sx < 0 or sx > screen_w:
-                continue
-            pygame.draw.line(self.surface, HTMLColor.BLACK, (sx, 0), (sx, screen_h))
+            pygame.draw.line(self.surface, HTMLColor.BLACK, (sx, int(y0)), (sx, int(y1)))
         for y in range(grid_h + 1):
             _, sy = self._world_to_screen(0, y)
             sy = int(sy)
-            if sy < 0 or sy > screen_h:
-                continue
-            pygame.draw.line(self.surface, HTMLColor.BLACK, (0, sy), (screen_w, sy))
+            pygame.draw.line(self.surface, HTMLColor.BLACK, (int(x0), sy), (int(x1), sy))
 
     def _render_ghost(self):
         if self.selected_entity is None or self._is_ant_panel_active:
